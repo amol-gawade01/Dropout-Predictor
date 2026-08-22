@@ -1,0 +1,33 @@
+[project]
+name = "sih-student-success"
+version = "0.1.0"
+description = "AI-powered student retention and Socratic learning platform for SIH"
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    "fastapi[standard]",
+    "sqlalchemy>=2.0,<2.1",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic-settings>=2",
+    "pgvector",
+    "pandas",
+    "openpyxl",
+    "numpy",
+    "scikit-learn>=1.9,<2",
+    "xgboost-cpu>=3.4,<4",
+    "shap>=0.52,<0.53",
+    "joblib",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "httpx",
+    "ruff",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
