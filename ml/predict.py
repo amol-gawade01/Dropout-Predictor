@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import shap
 from xgboost import XGBClassifier
+from pathlib import Path
 
 
 # ============================================================
@@ -133,13 +134,20 @@ RISK_FACTORS = {
 # LOAD MODEL
 # ============================================================
 
-MODEL_PATH = "models/student_dropout_xgboost.json"
+BASE_DIR = Path(__file__).resolve().parent
+
+MODEL_PATH = (
+    BASE_DIR
+    / "models"
+    / "student_dropout_xgboost.json"
+)
 
 
 model = XGBClassifier()
 
-model.load_model(MODEL_PATH)
-
+model.load_model(
+    MODEL_PATH
+)
 explainer = shap.TreeExplainer(model)
 
 

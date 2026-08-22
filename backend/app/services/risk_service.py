@@ -4,40 +4,58 @@ from backend.app.db.models import (
     RiskInference,
     StudentFeatureSnapshot,
 )
-from ml.features import MODEL_FEATURES
-from ml.inference import RiskPredictor
+
+from ml.predict import (
+    MODEL_FEATURES,
+    predict_student,
+)
 
 
-_predictor = None
-
-
-def get_predictor():
-    global _predictor
-
-    if _predictor is None:
-        _predictor = RiskPredictor()
-
-    return _predictor
+MODEL_VERSION = "sih-xgb-v1"
 
 
 def evaluate_snapshot(
     db: Session,
     snapshot: StudentFeatureSnapshot,
 ):
-    predictor = get_predictor()
+
+    # --------------------------------------------------------
+    # Convert database snapshot → ML input
+    # --------------------------------------------------------
 
     payload = {
         feature: getattr(
             snapshot,
             feature,
         )
-        for feature
-        in MODEL_FEATURES
+        for feature in MODEL_FEATURES
     }
 
-    result = predictor.predict(
+    # --------------------------------------------------------
+    # Run existing ML pipeline
+    # --------------------------------------------------------
+
+    result = predict_student(
         payload
     )
+
+    risk_score = float(
+        result["risk_score"]
+    )
+
+    # Your model already returns LOW/MODERATE/CRITICAL
+    risk_tier = result[
+        "risk_tier"
+    ]
+
+    # Keep binary prediction simple for now.
+    predicted_dropout = (
+        risk_score >= 0.50
+    )
+
+    # --------------------------------------------------------
+    # Store inference
+    # --------------------------------------------------------
 
     inference = RiskInference(
 
@@ -48,38 +66,27 @@ def evaluate_snapshot(
             snapshot.snapshot_id,
 
         model_version=
-            result[
-                "model_version"
-            ],
+            MODEL_VERSION,
 
         risk_score=
-            result[
-                "risk_score"
-            ],
+            risk_score,
 
         risk_tier=
-            result[
-                "risk_tier"
-            ],
+            risk_tier,
 
         decision_threshold=
-            result[
-                "decision_threshold"
-            ],
+            0.50,
 
         predicted_dropout=
-            result[
-                "predicted_dropout"
-            ],
+            predicted_dropout,
 
-        top_features=
-            result[
-                "top_features"
-            ],
+        # Your current ML architecture returns
+        # factor-level explanations, not raw top features.
+        top_features=[],
 
         top_factors=
             result[
-                "top_factors"
+                "top_risk_factors"
             ],
     )
 
@@ -89,10 +96,48 @@ def evaluate_snapshot(
 
     db.refresh(inference)
 
-    result[
-        "inference_id"
-    ] = str(
-        inference.inference_id
-    )
+    # --------------------------------------------------------
+    # Backend response
+    # --------------------------------------------------------
 
-    return result
+    return {
+        "inference_id":
+            str(
+                inference.inference_id
+            ),
+
+        "student_id":
+            str(
+                snapshot.student_id
+            ),
+
+        "snapshot_id":
+            str(
+                snapshot.snapshot_id
+            ),
+
+        "model_version":
+            MODEL_VERSION,
+
+        "risk_score":
+            risk_score,
+
+        "risk_percentage":
+            result[
+                "risk_percentage"
+            ],
+
+        "risk_tier":
+            risk_tier,
+
+        "predicted_dropout":
+            predicted_dropout,
+
+        "decision_threshold":
+            0.50,
+
+        "top_risk_factors":
+            result[
+                "top_risk_factors"
+            ],
+    }
