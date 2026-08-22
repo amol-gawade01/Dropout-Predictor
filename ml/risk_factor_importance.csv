@@ -1,0 +1,12 @@
+risk_factor,mean_shap_importance,number_of_features,importance_percentage
+Family / Domestic Responsibility,0.21197738,1,18.044327
+Attendance Decline,0.120258,3,10.236822
+Transition / Language / Prerequisite Gap,0.11947815,2,10.170438
+Low Belonging / Weak Support,0.110439956,2,9.4010725
+Low Learning Engagement,0.11038948,5,9.396775
+Financial Stress,0.10469617,3,8.912139
+Commute / Housing,0.092681535,2,7.889407
+Academic Difficulty,0.087898396,4,7.4822483
+Employment / Work Pressure,0.07574043,1,6.447315
+Course Mismatch / Low Interest,0.07289705,2,6.205276
+Wellbeing / Support Need,0.068302654,2,5.8141837
