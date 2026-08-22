@@ -412,3 +412,19 @@ for i in range(10):
 print("\n" + "=" * 60)
 print("MODEL TRAINING COMPLETE")
 print("=" * 60)
+# ============================================================
+# 14. SAVE TRAINED MODEL
+# ============================================================
+
+import os
+
+os.makedirs("models", exist_ok=True)
+
+model.save_model(
+    "models/student_dropout_xgboost.json"
+)
+
+print("\nModel saved successfully!")
+print(
+    "Location: models/student_dropout_xgboost.json"
+)
