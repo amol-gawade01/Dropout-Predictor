@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.api.routes import (
     health,
     risk,
+    dashboard,
 )
 from backend.app.core.config import (
     get_settings,
@@ -45,6 +46,11 @@ app.include_router(
     risk.router,
     prefix="/api/v1",
     tags=["Student Risk"],
+)
+
+app.include_router(
+    dashboard.router,
+    prefix="/api/v1",
 )
 
 

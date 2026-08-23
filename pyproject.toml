@@ -17,6 +17,7 @@ dependencies = [
     "xgboost-cpu>=3.4,<4",
     "shap>=0.52,<0.53",
     "joblib",
+    "langgraph>=1.2.11",
 ]
 
 [dependency-groups]
@@ -31,3 +32,5 @@ line-length = 100
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

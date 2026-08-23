@@ -61,6 +61,7 @@ MODEL_FEATURES = [
     "support_requested",
 ]
 
+TARGET_COLUMN = "dropout_label"
 
 # ============================================================
 # 11 RISK FACTORS
