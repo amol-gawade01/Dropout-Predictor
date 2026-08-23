@@ -2,11 +2,16 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api.routes import (
-    health,
-    risk,
+    auth,
     dashboard,
+    faculty,
+    health,
+    integration,
+    risk,
+    student_dashboard,
     tutor,
 )
+
 from backend.app.core.config import (
     get_settings,
 )
@@ -55,6 +60,26 @@ app.include_router(
 )
 app.include_router(
     tutor.router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    integration.router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    faculty.router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    student_dashboard.router,
+    prefix="/api/v1",
+)
+
+app.include_router(
+    auth.router,
     prefix="/api/v1",
 )
 

@@ -573,3 +573,238 @@ class SocraticDialogueLog(Base):
         DateTime(timezone=True),
         server_default=func.now(),
     )
+
+# ============================================================
+# STUDENT LEARNING SESSION
+# ============================================================
+
+
+class StudentLearningSession(Base):
+
+    __tablename__ = "student_learning_sessions"
+
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("students.student_id"),
+        nullable=False,
+        index=True,
+    )
+
+    # Concept the student originally wanted to learn.
+    primary_concept_id: Mapped[str] = mapped_column(
+        String(100),
+        ForeignKey("concepts.concept_id"),
+        nullable=False,
+    )
+
+    # Concept currently being practiced.
+    # This can change temporarily when a prerequisite gap
+    # is detected.
+    active_concept_id: Mapped[str] = mapped_column(
+        String(100),
+        ForeignKey("concepts.concept_id"),
+        nullable=False,
+    )
+
+    language_code: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="en-IN",
+    )
+
+    target_questions: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=5,
+    )
+
+    answered_questions: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
+    correct_answers: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+    )
+
+    starting_mastery: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        default=0.20,
+    )
+
+    final_mastery: Mapped[float | None] = mapped_column(
+        Float,
+        nullable=True,
+    )
+
+    status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        default="ACTIVE",
+        index=True,
+    )
+
+    completion_reason: Mapped[str | None] = mapped_column(
+        String(80),
+        nullable=True,
+    )
+
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    ended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+
+# ============================================================
+# LEARNING SESSION ATTEMPT
+# ============================================================
+
+
+class StudentLearningSessionAttempt(Base):
+
+    __tablename__ = "student_learning_session_attempts"
+
+    attempt_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "student_learning_sessions.session_id"
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    # Links this attempt to your existing
+    # SocraticDialogueLog.
+    interaction_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "socratic_dialogue_logs.interaction_id"
+        ),
+        nullable=True,
+    )
+
+    question_id: Mapped[str] = mapped_column(
+        String(100),
+        nullable=False,
+    )
+
+    concept_id: Mapped[str] = mapped_column(
+        String(100),
+        ForeignKey("concepts.concept_id"),
+        nullable=False,
+    )
+
+    is_correct: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+    )
+
+    diagnosis: Mapped[str] = mapped_column(
+        String(60),
+        nullable=False,
+    )
+
+    mastery_before: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+    )
+
+    mastery_after: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+# ============================================================
+# USER ACCOUNT / AUTH
+# ============================================================
+
+
+class UserAccount(Base):
+
+    __tablename__ = "user_accounts"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    email: Mapped[str] = mapped_column(
+        String(255),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
+
+    password_hash: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+    )
+
+    # STUDENT | FACULTY | ADMIN
+    role: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        index=True,
+    )
+
+    display_name: Mapped[str] = mapped_column(
+        String(128),
+        nullable=False,
+    )
+
+    # Only STUDENT accounts need this.
+    student_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("students.student_id"),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=True,
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )

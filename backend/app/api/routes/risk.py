@@ -15,7 +15,9 @@ from backend.app.db.session import get_db
 from backend.app.services.risk_service import (
     evaluate_snapshot,
 )
-
+from backend.app.core.auth import (
+    require_roles,
+)
 import uuid
 
 from fastapi import (
@@ -39,10 +41,31 @@ from backend.app.services.risk_service import (
     evaluate_snapshot,
 )
 
-router = APIRouter()
+router = APIRouter(
+    prefix="/risk",
+    tags=["Risk"],
+
+    dependencies=[
+        Depends(
+            require_roles(
+                "FACULTY",
+                "ADMIN",
+            )
+        )
+    ],
+)
 
 
-@router.post("/risk/evaluate-all")
+@router.post(
+    "/risk/evaluate-all",
+    dependencies=[
+        Depends(
+            require_roles(
+                "ADMIN"
+            )
+        )
+    ],
+)
 def evaluate_all_students(
 
     limit: int = Query(

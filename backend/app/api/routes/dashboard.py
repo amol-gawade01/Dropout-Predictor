@@ -15,10 +15,22 @@ from backend.app.db.models import (
 )
 from backend.app.db.session import get_db
 
+from backend.app.core.auth import (
+    require_roles,
+)
 
 router = APIRouter(
     prefix="/dashboard",
     tags=["Dashboard"],
+
+    dependencies=[
+        Depends(
+            require_roles(
+                "FACULTY",
+                "ADMIN",
+            )
+        )
+    ],
 )
 
 

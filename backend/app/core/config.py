@@ -28,6 +28,17 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    google_api_key: str = ""
+
+    gemini_model: str = (
+    "gemini-3.6-flash"
+    )
+    jwt_secret_key: str = ""
+
+    jwt_algorithm: str = "HS256"
+
+    access_token_expire_minutes: int = 120
+
 
 @lru_cache
 def get_settings() -> Settings:
