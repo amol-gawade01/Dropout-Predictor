@@ -5,6 +5,7 @@ from backend.app.api.routes import (
     health,
     risk,
     dashboard,
+    tutor,
 )
 from backend.app.core.config import (
     get_settings,
@@ -52,7 +53,10 @@ app.include_router(
     dashboard.router,
     prefix="/api/v1",
 )
-
+app.include_router(
+    tutor.router,
+    prefix="/api/v1",
+)
 
 @app.get("/")
 def home():
