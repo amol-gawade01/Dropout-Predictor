@@ -1,54 +1,52 @@
 from sqlalchemy.orm import Session
 
-from backend.app.db.models import (
-    Concept,
-    SocraticDialogueLog,
-    Student,
+from agents.tutor_graph import (
+    tutor_graph,
 )
 
-from tutor.bkt import update_mastery
-from tutor.diagnostic import diagnose_attempt
+from backend.app.db.models import (
+    Concept,
+    Student,
+    StudentConceptMastery,
+)
+
+
+MASTERY_THRESHOLD = 0.80
 
 
 def process_tutor_attempt(
     db: Session,
     student_code: str,
     concept_id: str,
+    question: str,
     student_answer: str,
     is_correct: bool,
     language_code: str = "en-IN",
 ):
-    """
-    Process one Tutor attempt.
 
-    Phase 3:
-    - Find student
-    - Find concept
-    - Diagnose response
-    - Update BKT mastery
-    - Save Socratic dialogue log
-    """
-
-    # --------------------------------------------------------
+    # ========================================================
     # 1. FIND STUDENT
-    # --------------------------------------------------------
+    # ========================================================
 
     student = (
         db.query(Student)
         .filter(
-            Student.student_code == student_code
+            Student.student_code
+            == student_code
         )
         .first()
     )
 
     if student is None:
+
         raise ValueError(
-            f"Student '{student_code}' not found."
+            "Student not found"
         )
 
-    # --------------------------------------------------------
+
+    # ========================================================
     # 2. FIND CONCEPT
-    # --------------------------------------------------------
+    # ========================================================
 
     concept = db.get(
         Concept,
@@ -56,181 +54,237 @@ def process_tutor_attempt(
     )
 
     if concept is None:
+
         raise ValueError(
-            f"Concept '{concept_id}' not found."
+            "Concept not found"
         )
 
-    # --------------------------------------------------------
-    # 3. GET CURRENT MASTERY
-    # --------------------------------------------------------
 
-    from backend.app.db.models import (
-        StudentConceptMastery,
-    )
+    # ========================================================
+    # 3. GET EXISTING MASTERY
+    # ========================================================
 
-    mastery_record = (
-        db.query(StudentConceptMastery)
+    mastery = (
+        db.query(
+            StudentConceptMastery
+        )
         .filter(
             StudentConceptMastery.student_id
             == student.student_id,
 
             StudentConceptMastery.concept_id
-            == concept_id,
+            == concept.concept_id,
         )
         .first()
     )
 
-    if mastery_record is None:
 
-        mastery_before = 0.20
+    # ========================================================
+    # 4. CREATE MASTERY IF FIRST ATTEMPT
+    # ========================================================
 
-        mastery_record = StudentConceptMastery(
-            student_id=student.student_id,
-            concept_id=concept_id,
-            mastery_prob=0.20,
-            total_attempts=0,
-            consecutive_correct=0,
+    if mastery is None:
+
+        mastery = StudentConceptMastery(
+
+            student_id=
+                student.student_id,
+
+            concept_id=
+                concept.concept_id,
+
+            mastery_prob=
+                0.20,
+
+            total_attempts=
+                0,
+
+            consecutive_correct=
+                0,
         )
 
-        db.add(mastery_record)
+        db.add(
+            mastery
+        )
 
         db.flush()
 
-    else:
 
-        mastery_before = float(
-            mastery_record.mastery_prob
+    mastery_before = float(
+        mastery.mastery_prob
+    )
+
+
+    # ========================================================
+    # 5. SEND STATE TO LANGGRAPH
+    # ========================================================
+
+    graph_input = {
+
+        "student_id":
+            str(
+                student.student_id
+            ),
+
+        "concept_id":
+            concept.concept_id,
+
+        "prerequisite_concept_id":
+            concept
+            .prerequisite_concept_id,
+
+        "question":
+            question,
+
+        "student_answer":
+            student_answer,
+
+        "is_correct":
+            is_correct,
+
+        "mastery_before":
+            mastery_before,
+
+        "diagnosis":
+            None,
+
+        "route":
+            None,
+
+        "tutor_strategy":
+            None,
+
+        "tutor_message":
+            None,
+
+        "mastery_after":
+            None,
+    }
+
+
+    graph_result = (
+        tutor_graph.invoke(
+            graph_input
         )
-
-    # --------------------------------------------------------
-    # 4. DIAGNOSE ANSWER
-    # --------------------------------------------------------
-
-    diagnosis = diagnose_attempt(
-        student_answer=student_answer,
-        is_correct=is_correct,
-        mastery_prob=mastery_before,
     )
 
-    # --------------------------------------------------------
-    # 5. UPDATE BKT
-    # --------------------------------------------------------
 
-    mastery_after = update_mastery(
-        prior_mastery=mastery_before,
-        correct=is_correct,
+    # ========================================================
+    # 6. GET NEW BKT MASTERY
+    # ========================================================
+
+    mastery_after = float(
+        graph_result[
+            "mastery_after"
+        ]
     )
 
-    # --------------------------------------------------------
-    # 6. UPDATE MASTERY RECORD
-    # --------------------------------------------------------
 
-    mastery_record.mastery_prob = mastery_after
+    # ========================================================
+    # 7. UPDATE DATABASE
+    # ========================================================
 
-    mastery_record.total_attempts += 1
+    mastery.mastery_prob = (
+        mastery_after
+    )
+
+    mastery.total_attempts += 1
+
 
     if is_correct:
-        mastery_record.consecutive_correct += 1
-    else:
-        mastery_record.consecutive_correct = 0
 
-    # --------------------------------------------------------
-    # 7. GENERATE PHASE 3 SOCRATIC RESPONSE
-    # --------------------------------------------------------
-
-    if diagnosis == "PREREQUISITE_GAP":
-
-        socratic_prompt = (
-            "Let's revisit the prerequisite concept first. "
-            "What do you already remember about the basic idea?"
-        )
-
-    elif diagnosis == "CONCEPTUAL_MISUNDERSTANDING":
-
-        socratic_prompt = (
-            "Think about the definition of the concept. "
-            "Which fundamental property should your answer satisfy?"
-        )
-
-    elif diagnosis == "MINOR_ERROR":
-
-        socratic_prompt = (
-            "You're close. Recheck the step where your "
-            "reasoning changed. What assumption did you make?"
-        )
-
-    elif diagnosis == "CORRECT":
-
-        socratic_prompt = (
-            "Good work. Now explain why your answer is correct "
-            "using the underlying concept."
-        )
+        mastery.consecutive_correct += 1
 
     else:
 
-        socratic_prompt = (
-            "That's okay. Tell me which part of the question "
-            "is unclear, and we'll work through it together."
-        )
+        mastery.consecutive_correct = 0
 
-    # --------------------------------------------------------
-    # 8. SAVE SOCRATIC DIALOGUE LOG
-    # --------------------------------------------------------
-
-    dialogue_log = SocraticDialogueLog(
-
-        student_id=student.student_id,
-
-        concept_id=concept_id,
-
-        student_raw_input=student_answer,
-
-        language_code=language_code,
-
-        diagnosed_error=diagnosis,
-
-        socratic_prompt_returned=socratic_prompt,
-
-        mastery_prior=mastery_before,
-
-        mastery_post=mastery_after,
-    )
-
-    db.add(dialogue_log)
-
-    # --------------------------------------------------------
-    # 9. COMMIT EVERYTHING
-    # --------------------------------------------------------
 
     db.commit()
 
-    # --------------------------------------------------------
-    # 10. RESPONSE
-    # --------------------------------------------------------
+    db.refresh(
+        mastery
+    )
+
+
+    # ========================================================
+    # 8. RETURN RESULT
+    # ========================================================
 
     return {
-        "student_code": student_code,
 
-        "concept_id": concept_id,
+        "student_code":
+            student.student_code,
 
-        "diagnosis": diagnosis,
+        "concept": {
 
-        "socratic_prompt": socratic_prompt,
+            "concept_id":
+                concept.concept_id,
 
-        "mastery_before": mastery_before,
+            "topic_name":
+                concept.topic_name,
 
-        "mastery_after": mastery_after,
+            "prerequisite_concept_id":
+                concept
+                .prerequisite_concept_id,
+        },
 
-        "mastery_change": round(
-            mastery_after - mastery_before,
-            4,
-        ),
+        "question":
+            question,
 
-        "total_attempts":
-            mastery_record.total_attempts,
+        "student_answer":
+            student_answer,
 
-        "consecutive_correct":
-            mastery_record.consecutive_correct,
+        "is_correct":
+            is_correct,
 
-        "language_code": language_code,
+        "diagnosis":
+            graph_result[
+                "diagnosis"
+            ],
+
+        "route":
+            graph_result[
+                "route"
+            ],
+
+        "tutor_strategy":
+            graph_result[
+                "tutor_strategy"
+            ],
+
+        "tutor_message":
+            graph_result[
+                "tutor_message"
+            ],
+
+        "mastery": {
+
+            "before":
+                mastery_before,
+
+            "after":
+                mastery_after,
+
+            "change":
+                round(
+                    mastery_after
+                    - mastery_before,
+                    4,
+                ),
+
+            "mastered":
+                mastery_after
+                >= MASTERY_THRESHOLD,
+
+            "total_attempts":
+                mastery.total_attempts,
+
+            "consecutive_correct":
+                mastery
+                .consecutive_correct,
+        },
+
+        "language_code":
+            language_code,
     }
