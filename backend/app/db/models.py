@@ -4,6 +4,7 @@ from datetime import date, datetime
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     Boolean,
+    Column,
     Date,
     DateTime,
     Float,
@@ -807,4 +808,139 @@ class UserAccount(Base):
         server_default=func.now(),
         onupdate=func.now(),
         nullable=False,
+    )
+
+class GuardianContact(Base):
+    __tablename__ = "guardian_contacts"
+
+    guardian_id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    student_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "students.student_id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    guardian_name = Column(
+        String(128),
+        nullable=False,
+    )
+
+    relationship = Column(
+        String(50),
+        nullable=True,
+    )
+
+    phone_number = Column(
+        String(20),
+        nullable=False,
+    )
+
+    whatsapp_opt_in = Column(
+        Boolean,
+        nullable=False,
+        default=False,
+    )
+
+    is_primary = Column(
+        Boolean,
+        nullable=False,
+        default=True,
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+    )
+
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+
+
+class ParentReportDelivery(Base):
+    __tablename__ = "parent_report_deliveries"
+
+    report_id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+
+    student_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "students.student_id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+        index=True,
+    )
+
+    guardian_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "guardian_contacts.guardian_id",
+            ondelete="CASCADE",
+        ),
+        nullable=False,
+    )
+
+    risk_inference_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "risk_inferences.inference_id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+    )
+
+    generated_by_user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(
+            "user_accounts.user_id",
+            ondelete="SET NULL",
+        ),
+        nullable=True,
+    )
+
+    support_level = Column(
+        String(50),
+        nullable=False,
+    )
+
+    status = Column(
+        String(30),
+        nullable=False,
+        default="CREATED",
+    )
+
+    whatsapp_message_id = Column(
+        String(255),
+        nullable=True,
+    )
+
+    error_message = Column(
+        Text,
+        nullable=True,
+    )
+
+    sent_at = Column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
     )

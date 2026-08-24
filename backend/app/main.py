@@ -16,6 +16,9 @@ from backend.app.core.config import (
     get_settings,
 )
 
+from backend.app.api.routes import (
+    parent_reports,
+)
 
 settings = get_settings()
 
@@ -89,3 +92,8 @@ def home():
         "docs":
             "/docs",
     }
+
+app.include_router(
+    parent_reports.router,
+    prefix="/api/v1",
+)

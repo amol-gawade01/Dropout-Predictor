@@ -43,6 +43,16 @@ class Settings(BaseSettings):
 
     access_token_expire_minutes: int = 120
 
+    whatsapp_graph_version: str | None = None
+
+    whatsapp_phone_number_id: str | None = None
+
+    whatsapp_access_token: str | None = None
+
+    whatsapp_template_name: str | None = None
+
+    whatsapp_template_language: str = "en_US"
+
 
 @lru_cache
 def get_settings() -> Settings:
