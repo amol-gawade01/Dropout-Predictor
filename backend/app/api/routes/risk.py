@@ -57,11 +57,12 @@ router = APIRouter(
 
 
 @router.post(
-    "/risk/evaluate-all",
+    "/evaluate-all",
     dependencies=[
         Depends(
             require_roles(
-                "ADMIN"
+                "FACULTY",
+                "ADMIN",
             )
         )
     ],
@@ -224,7 +225,7 @@ def evaluate_all_students(
     }
 
 @router.post(
-    "/risk/evaluate/{student_code}"
+    "/evaluate/{student_code}"
 )
 def evaluate_student(
     student_code: str,
