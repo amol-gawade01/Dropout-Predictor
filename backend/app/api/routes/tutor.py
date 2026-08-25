@@ -1,3 +1,5 @@
+from langchain_google_genai.chat_models import GoogleRateLimitError
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -78,6 +80,17 @@ router = APIRouter(
     prefix="/tutor",
     tags=["Tutor"],
 )
+
+
+def gemini_rate_limit_http_exception():
+    return HTTPException(
+        status_code=429,
+        detail=(
+            "The AI tutor has reached its Gemini quota. "
+            "Please retry later or ask an administrator to check API quota and billing."
+        ),
+        headers={"Retry-After": "60"},
+    )
 
 
 # ============================================================
@@ -545,6 +558,10 @@ def adaptive_attempt(
             status_code=404,
             detail=str(exc),
         ) from exc
+
+    except GoogleRateLimitError as exc:
+
+        raise gemini_rate_limit_http_exception() from exc
 
     except RuntimeError as exc:
 
@@ -1202,6 +1219,10 @@ def session_answer(
             status_code=400,
             detail=str(exc),
         ) from exc
+
+    except GoogleRateLimitError as exc:
+
+        raise gemini_rate_limit_http_exception() from exc
 # ============================================================
 # END SESSION
 # ============================================================
