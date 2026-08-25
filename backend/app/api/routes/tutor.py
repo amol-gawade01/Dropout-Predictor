@@ -38,6 +38,7 @@ from backend.app.services.tutor_service import (
 from tutor.question_selector import (
     select_question,
 )
+from tutor.question_bank import get_display_question
 
 from backend.app.schemas.tutor import (
     AdaptiveTutorAttemptRequest,
@@ -355,6 +356,10 @@ def next_question(
 
     concept_id: str,
 
+    language_code: str = Query(
+        default="en-IN"
+    ),
+
     current_user:
     UserAccount
     = Depends(
@@ -469,9 +474,10 @@ def next_question(
                 ],
 
             "text":
-                question[
-                    "question"
-                ],
+                get_display_question(
+                    question,
+                    language_code,
+                ),
 
             "difficulty":
                 question[

@@ -74,3 +74,14 @@ Install the required packages:
 
 ```bash
 pip install -r requirements.txt
+```
+
+## Backend development server
+
+Start FastAPI with automatic reload from the repository root:
+
+```bash
+uv run python -m backend.dev
+```
+
+The API runs at `http://127.0.0.1:8000`, and Swagger is at `http://127.0.0.1:8000/docs`. Changes in `backend/`, `agents/`, `tutor/`, or `ml/` restart the local server. Do not use this reload command as the Render production start command.

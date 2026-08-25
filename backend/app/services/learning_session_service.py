@@ -18,6 +18,7 @@ from backend.app.services.adaptive_tutor_service import (
 from tutor.question_selector import (
     select_question,
 )
+from tutor.question_bank import get_display_question
 
 
 # ============================================================
@@ -256,9 +257,10 @@ def get_next_session_question(
                 ],
 
             "text":
-                question[
-                    "question"
-                ],
+                get_display_question(
+                    question,
+                    session.language_code,
+                ),
 
             "difficulty":
                 question[
