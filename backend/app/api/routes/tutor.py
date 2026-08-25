@@ -38,7 +38,7 @@ from backend.app.services.tutor_service import (
 from tutor.question_selector import (
     select_question,
 )
-from tutor.question_bank import get_display_question
+from tutor.question_bank import get_display_question, get_questions_for_concept
 
 from backend.app.schemas.tutor import (
     AdaptiveTutorAttemptRequest,
@@ -120,6 +120,11 @@ def list_concepts(
         )
         .all()
     )
+
+    concepts = [
+        concept for concept in concepts
+        if get_questions_for_concept(concept.concept_id)
+    ]
 
     return {
 

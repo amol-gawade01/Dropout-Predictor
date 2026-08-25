@@ -18,7 +18,7 @@ from backend.app.services.adaptive_tutor_service import (
 from tutor.question_selector import (
     select_question,
 )
-from tutor.question_bank import get_display_question
+from tutor.question_bank import get_display_question, get_questions_for_concept
 
 
 # ============================================================
@@ -296,6 +296,11 @@ def start_learning_session(
     if concept is None:
         raise ValueError(
             "Concept not found"
+        )
+
+    if not get_questions_for_concept(concept.concept_id):
+        raise ValueError(
+            "This concept does not have practice questions yet"
         )
 
 

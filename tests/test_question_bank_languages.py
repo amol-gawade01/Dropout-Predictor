@@ -60,3 +60,19 @@ def test_unsupported_session_language_is_rejected():
             concept_id="dsa_arrays",
             language_code="fr-FR",
         )
+
+
+def test_session_with_no_questions_is_rejected_before_creation(monkeypatch):
+    concept = SimpleNamespace(concept_id="dsa_graphs", topic_name="Graphs")
+    student = SimpleNamespace(student_id="student-id", student_code="STU001")
+    db = SimpleNamespace(get=lambda model, key: concept)
+    monkeypatch.setattr(learning_session_service, "find_student", lambda *args: student)
+
+    with pytest.raises(ValueError, match="does not have practice questions"):
+        learning_session_service.start_learning_session(
+            db=db,
+            student_code="STU001",
+            concept_id="dsa_graphs",
+            target_questions=5,
+            language_code="en-IN",
+        )
