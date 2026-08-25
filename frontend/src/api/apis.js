@@ -7,6 +7,7 @@ export const authApi = {
 
 export const studentApi = {
   dashboard: () => cachedGet('/student-dashboard/me'),
+  academics: () => cachedGet('/student-dashboard/me/academics'),
   mastery: () => cachedGet('/student-dashboard/me/mastery'),
   trend: (conceptId) => cachedGet('/student-dashboard/me/mastery-trend', { params: { concept_id: conceptId } }),
   recentActivity: (limit = 20) => cachedGet('/student-dashboard/me/recent-activity', { params: { limit } }),

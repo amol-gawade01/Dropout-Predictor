@@ -13,6 +13,7 @@ from backend.app.db.session import (
 
 from backend.app.services.student_dashboard_service import (
     build_student_dashboard,
+    get_student_academic_summary,
     get_student_mastery_dashboard,
     get_student_mastery_trend,
     get_student_recent_activity,
@@ -50,6 +51,17 @@ def my_student_dashboard(
         db=db,
         student_code=
             student.student_code,
+    )
+
+
+@router.get("/me/academics")
+def my_academics(
+    student: Student = Depends(get_current_student),
+    db: Session = Depends(get_db),
+):
+    return get_student_academic_summary(
+        db=db,
+        student_code=student.student_code,
     )
 
 

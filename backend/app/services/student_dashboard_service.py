@@ -11,6 +11,7 @@ from backend.app.db.models import (
     SocraticDialogueLog,
     Student,
     StudentConceptMastery,
+    StudentFeatureSnapshot,
     StudentLearningSession,
     StudentLearningSessionAttempt,
 )
@@ -45,6 +46,47 @@ def get_student(
         )
 
     return student
+
+
+# ============================================================
+# ACADEMIC SNAPSHOT
+# ============================================================
+
+
+def get_student_academic_summary(
+    db: Session,
+    student_code: str,
+):
+    """Return the latest institution-provided academic snapshot."""
+    student = get_student(db, student_code)
+    snapshot = (
+        db.query(StudentFeatureSnapshot)
+        .filter(StudentFeatureSnapshot.student_id == student.student_id)
+        .order_by(StudentFeatureSnapshot.week_start_date.desc())
+        .first()
+    )
+
+    if snapshot is None:
+        return {
+            "available": False,
+            "message": "No attendance or academic result has been uploaded yet.",
+        }
+
+    return {
+        "available": True,
+        "semester": snapshot.semester,
+        "week_start_date": snapshot.week_start_date,
+        "current_gpa": round(float(snapshot.current_gpa), 2),
+        "failed_subjects": snapshot.failed_subjects,
+        "backlog_count": snapshot.backlog_count,
+        "credits_completion_percentage": round(float(snapshot.credits_completion_ratio) * 100, 2),
+        "attendance_percentage": round(float(snapshot.attendance_pct), 2),
+        "attendance_change_14d": round(float(snapshot.attendance_velocity_14d), 2),
+        "consecutive_absent_days": snapshot.consecutive_absent_days,
+        "assignment_completion_percentage": round(float(snapshot.assignment_completion_pct), 2),
+        "missed_assessments": snapshot.missed_assessments,
+        "source": snapshot.source,
+    }
 
 
 # ============================================================
@@ -542,6 +584,12 @@ def build_student_dashboard(
             "preferred_language":
                 student.preferred_language,
         },
+
+        "academic_summary":
+            get_student_academic_summary(
+                db=db,
+                student_code=student.student_code,
+            ),
 
         "support": {
             "level":
