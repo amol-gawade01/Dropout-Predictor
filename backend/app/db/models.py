@@ -574,13 +574,13 @@ class SocraticDialogueLog(Base):
         server_default=func.now(),
     )
 
+
 # ============================================================
 # STUDENT LEARNING SESSION
 # ============================================================
 
 
 class StudentLearningSession(Base):
-
     __tablename__ = "student_learning_sessions"
 
     session_id: Mapped[uuid.UUID] = mapped_column(
@@ -677,7 +677,6 @@ class StudentLearningSession(Base):
 
 
 class StudentLearningSessionAttempt(Base):
-
     __tablename__ = "student_learning_session_attempts"
 
     attempt_id: Mapped[uuid.UUID] = mapped_column(
@@ -688,9 +687,7 @@ class StudentLearningSessionAttempt(Base):
 
     session_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey(
-            "student_learning_sessions.session_id"
-        ),
+        ForeignKey("student_learning_sessions.session_id"),
         nullable=False,
         index=True,
     )
@@ -699,9 +696,7 @@ class StudentLearningSessionAttempt(Base):
     # SocraticDialogueLog.
     interaction_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey(
-            "socratic_dialogue_logs.interaction_id"
-        ),
+        ForeignKey("socratic_dialogue_logs.interaction_id"),
         nullable=True,
     )
 
@@ -742,13 +737,13 @@ class StudentLearningSessionAttempt(Base):
         nullable=False,
     )
 
+
 # ============================================================
 # USER ACCOUNT / AUTH
 # ============================================================
 
 
 class UserAccount(Base):
-
     __tablename__ = "user_accounts"
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -808,6 +803,8 @@ class UserAccount(Base):
         onupdate=func.now(),
         nullable=False,
     )
+
+
 # ============================================================
 # PARENT / GUARDIAN REPORT DELIVERY
 # ============================================================
@@ -827,9 +824,11 @@ class StudentGuardian(Base):
     )
     guardian_name: Mapped[str] = mapped_column(String(128), nullable=False)
     phone_number: Mapped[str] = mapped_column(String(20), nullable=False)
+    email_address: Mapped[str | None] = mapped_column(String(255), nullable=True)
     relationship: Mapped[str] = mapped_column(String(40), nullable=False)
     preferred_language: Mapped[str] = mapped_column(String(10), default="en-IN")
     whatsapp_opt_in: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_opt_in: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     consent_recorded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
@@ -867,6 +866,7 @@ class ParentReportDelivery(Base):
     status: Mapped[str] = mapped_column(String(30), default="QUEUED", nullable=False)
     whatsapp_message_id: Mapped[str | None] = mapped_column(String(255))
     whatsapp_media_id: Mapped[str | None] = mapped_column(String(255))
+    email_message_id: Mapped[str | None] = mapped_column(String(255))
     mentor_note: Mapped[str | None] = mapped_column(Text)
     failure_reason: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(

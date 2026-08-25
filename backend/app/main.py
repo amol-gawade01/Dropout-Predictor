@@ -7,15 +7,14 @@ from backend.app.api.routes import (
     faculty,
     health,
     integration,
+    parent_reports,
     risk,
     student_dashboard,
     tutor,
 )
-
 from backend.app.core.config import (
     get_settings,
 )
-
 
 settings = get_settings()
 
@@ -28,11 +27,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        origin.strip()
-        for origin in settings.cors_origins.split(",")
-        if origin.strip()
-    ],
+    allow_origins=[origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -72,6 +67,11 @@ app.include_router(
 )
 
 app.include_router(
+    parent_reports.router,
+    prefix="/api/v1",
+)
+
+app.include_router(
     student_dashboard.router,
     prefix="/api/v1",
 )
@@ -81,11 +81,10 @@ app.include_router(
     prefix="/api/v1",
 )
 
+
 @app.get("/")
 def home():
     return {
-        "message":
-            "AI Student Success Platform API",
-        "docs":
-            "/docs",
+        "message": "AI Student Success Platform API",
+        "docs": "/docs",
     }

@@ -12,14 +12,9 @@ class Settings(BaseSettings):
         "http://localhost:4173,http://127.0.0.1:4173,http://localhost:3000,https://dropout-predictor-ten.vercel.app"
     )
 
-    database_url: str = (
-        "postgresql+psycopg://sih_user:sih_password"
-        "@localhost:5432/student_success"
-    )
+    database_url: str = "postgresql+psycopg://sih_user:sih_password@localhost:5432/student_success"
 
-    dataset_path: Path = Path(
-        "data/raw/SIH_Indian_Student_Dropout_Synthetic_Dataset_v1.xlsx"
-    )
+    dataset_path: Path = Path("data/raw/SIH_Indian_Student_Dropout_Synthetic_Dataset_v1.xlsx")
 
     model_dir: Path = Path("ml/artifacts")
 
@@ -34,21 +29,17 @@ class Settings(BaseSettings):
 
     google_api_key: str = ""
 
-    gemini_model: str = (
-    "gemini-3.6-flash"
-    )
+    gemini_model: str = "gemini-3.6-flash"
     jwt_secret_key: str = ""
 
     jwt_algorithm: str = "HS256"
 
     access_token_expire_minutes: int = 120
 
-    whatsapp_access_token: str = ""
-    whatsapp_phone_number_id: str = ""
-    whatsapp_business_account_id: str = ""
-    whatsapp_verify_token: str = ""
-    whatsapp_api_version: str = "v23.0"
-    whatsapp_report_template: str = "educompass_student_support_report"
+    gmail_address: str = ""
+    gmail_app_password: str = ""
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
 
 
 @lru_cache
