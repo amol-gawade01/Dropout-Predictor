@@ -808,3 +808,74 @@ class UserAccount(Base):
         onupdate=func.now(),
         nullable=False,
     )
+# ============================================================
+# PARENT / GUARDIAN REPORT DELIVERY
+# ============================================================
+
+
+class StudentGuardian(Base):
+    __tablename__ = "student_guardians"
+
+    guardian_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("students.student_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    guardian_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    phone_number: Mapped[str] = mapped_column(String(20), nullable=False)
+    relationship: Mapped[str] = mapped_column(String(40), nullable=False)
+    preferred_language: Mapped[str] = mapped_column(String(10), default="en-IN")
+    whatsapp_opt_in: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    consent_recorded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+
+class ParentReportDelivery(Base):
+    __tablename__ = "parent_report_deliveries"
+
+    delivery_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("students.student_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    guardian_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("student_guardians.guardian_id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    inference_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("risk_inferences.inference_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    approved_by: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("user_accounts.user_id"), nullable=False
+    )
+    language_code: Mapped[str] = mapped_column(String(10), nullable=False)
+    status: Mapped[str] = mapped_column(String(30), default="QUEUED", nullable=False)
+    whatsapp_message_id: Mapped[str | None] = mapped_column(String(255))
+    whatsapp_media_id: Mapped[str | None] = mapped_column(String(255))
+    mentor_note: Mapped[str | None] = mapped_column(Text)
+    failure_reason: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )

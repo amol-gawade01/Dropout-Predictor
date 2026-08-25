@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     cors_origins: str = (
         "http://localhost:5173,http://127.0.0.1:5173,"
-        "http://localhost:4173,http://127.0.0.1:4173,http://localhost:3000"
+        "http://localhost:4173,http://127.0.0.1:4173,http://localhost:3000,https://dropout-predictor-ten.vercel.app"
     )
 
     database_url: str = (
@@ -42,6 +42,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
 
     access_token_expire_minutes: int = 120
+
+    whatsapp_access_token: str = ""
+    whatsapp_phone_number_id: str = ""
+    whatsapp_business_account_id: str = ""
+    whatsapp_verify_token: str = ""
+    whatsapp_api_version: str = "v23.0"
+    whatsapp_report_template: str = "educompass_student_support_report"
 
 
 @lru_cache
